@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAC40 Analytics Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                    <img src="logo.png" alt="Les Insovables Anonymes" class="company-logo">
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="Rechercher une action..." class="search-input">
+                    <i class="fas fa-search search-icon"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- Filters -->
+        <div class="filters-section">
+            <div class="filter-group">
+                <label for="sectorFilter">Secteur :</label>
+                <select id="sectorFilter" class="filter-select">
+                    <option value="">Tous les secteurs</option>
+                    <option value="Banque">Banque</option>
+                    <option value="Luxe">Luxe</option>
+                    <option value="Énergie">Énergie</option>
+                    <option value="Technologie">Technologie</option>
+                    <option value="Industrie">Industrie</option>
+                    <option value="Consommation">Consommation</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="performanceFilter">Performance :</label>
+                <select id="performanceFilter" class="filter-select">
+                    <option value="">Toutes les performances</option>
+                    <option value="positive">Performance positive</option>
+                    <option value="negative">Performance négative</option>
+                    <option value="stable">Stable</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Historique :</label>
+                <select id="historyDays" class="filter-select">
+                    <option value="7">7 derniers jours</option>
+                    <option value="15">15 derniers jours</option>
+                    <option value="30" selected>30 derniers jours</option>
+                    <option value="60">60 derniers jours</option>
+                </select>
+            </div>
+
+            <button id="applyFilters" class="apply-btn">
+                <i class="fas fa-filter"></i> Appliquer les filtres
+            </button>
+        </div>
+
+        <!-- Loading indicator -->
+        <div id="loadingIndicator" class="loading hidden">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Chargement des données...</span>
+        </div>
+
+        <!-- Stocks Grid -->
+        <div class="stocks-grid" id="stocksGrid">
+            <!-- Les cartes d'actions seront générées dynamiquement -->
+        </div>
+
+        <!-- Stock Detail Modal -->
+        <div id="stockModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modalTitle">Détails de l'action</h2>
+                    <button class="close-btn" id="closeModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="modal-body">
+                    <div class="stock-info">
+                        <div class="stock-chart" id="stockChart">
+                            <div class="chart-header">
+                                <h3>Analyse des prix</h3>
+                                <div class="comparator-search">
+                                    <div class="search-input-group">
+                                        <input type="text" id="comparatorSearchInput" placeholder="Comparer avec..." class="comparator-search-input">
+                                        <button id="compareStock" class="compare-btn">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                    <button id="clearComparison" class="clear-comparison-btn" style="display: none;">
+                                        <i class="fas fa-times"></i> Effacer comparaison
+                                    </button>
+                                </div>
+                            </div>
+                            <canvas id="priceChart" width="400" height="200"></canvas>
+                        </div>
+                        
+                        <div class="analytics-section">
+                            <div class="correlation-card">
+                                <div class="card-header">
+                                    <h3><i class="fas fa-link"></i> Indice de Corrélation</h3>
+                                </div>
+                                <div class="correlation-score" id="correlationScore">
+                                    <span class="score">--</span>
+                                    <span class="label">/ 1.0</span>
+                                </div>
+                                <div class="correlation-description" id="correlationDescription">
+                                    Calcul en cours...
+                                </div>
+                            </div>
+
+                            <div class="projection-card">
+                                <div class="card-header">
+                                    <h3><i class="fas fa-crystal-ball"></i> Projection 7 jours</h3>
+                                </div>
+                                <div class="projection-content" id="projectionContent">
+                                    <div class="projection-price">
+                                        <div class="price-comparison">
+                                            <div class="current-price-section">
+                                                <span class="price-label">Prix actuel</span>
+                                                <span class="current-price" id="currentPrice">-- €</span>
+                                            </div>
+                                            <div class="arrow">→</div>
+                                            <div class="projected-price-section">
+                                                <span class="price-label">Prix projeté</span>
+                                                <span class="projected-price" id="projectedPrice">-- €</span>
+                                            </div>
+                                        </div>
+                                        <div class="projection-change" id="projectionChange">
+                                            <span class="change-label">Variation attendue</span>
+                                            <span class="change-value">--%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="sentiment-card">
+                                <div class="card-header">
+                                    <h3><i class="fas fa-heart"></i> Sentiment du marché</h3>
+                                </div>
+                                <div class="sentiment-content">
+                                    <div class="sentiment-indicator" id="sentimentIndicator">
+                                        <div class="sentiment-bar">
+                                            <div class="sentiment-fill" id="sentimentFill"></div>
+                                        </div>
+                                        <div class="sentiment-labels">
+                                            <span>Négatif</span>
+                                            <span>Neutre</span>
+                                            <span>Positif</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="keywords-card">
+                                <div class="card-header">
+                                    <h3><i class="fas fa-hashtag"></i> Mots-clés des réseaux sociaux</h3>
+                                </div>
+                                <div class="keywords-container" id="keywordsContainer">
+                                    <div class="keywords-list" id="keywordsList">
+                                        <!-- Mots-clés générés dynamiquement -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
